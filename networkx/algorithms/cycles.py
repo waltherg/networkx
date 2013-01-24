@@ -150,20 +150,20 @@ def simple_cycles(G):
     def circuit(thisnode, startnode, component):
         closed = False # set to True if elementary path is closed
         path.append(thisnode)
-        blocked[thisnode] = True
+        blocked[thisnode[0]] = True
         for nextnode in component[thisnode]: # direct successors of thisnode
             if nextnode == startnode:
                 result.append(path + [startnode])
                 closed = True
-            elif not blocked[nextnode]:
+            elif not blocked[nextnode[0]]:
                 if circuit(nextnode, startnode, component):
                     closed = True
         if closed:
-            _unblock(thisnode)
+            _unblock(thisnode[0])
         else:
             for nextnode in component[thisnode]:
-                if thisnode not in B[nextnode]: # TODO: use set for speedup?
-                    B[nextnode].append(thisnode)
+                if thisnode not in B[nextnode[0]]: # TODO: use set for speedup?
+                    B[nextnode[0]].append(thisnode)
         path.pop() # remove thisnode from path
         return closed
 
@@ -191,4 +191,10 @@ def simple_cycles(G):
                 blocked[node] = False
                 B[node][:] = []
             dummy=circuit(startnode, startnode, component)
+
+    print 'number of elementary circuits: ', str(len(result))
+    print 'elementary circuits:'
+    for circ in result:
+        print circ
+
     return result
