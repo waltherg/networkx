@@ -150,25 +150,28 @@ def simple_cycles(G):
     def circuit(thisnode, startnode, component):
         closed = False # set to True if elementary path is closed
         path.append(thisnode)
-        blocked[thisnode[0]] = True
+        blocked[thisnode] = True
+        blocked_complexes[thisnode[0]] = True
         for nextnode in component[thisnode]: # direct successors of thisnode
             if nextnode == startnode:
                 result.append(path + [startnode])
                 closed = True
-            elif not blocked[nextnode[0]]:
+            elif not blocked[nextnode] and not blocked_complexes[nextnode[0]]:
                 if circuit(nextnode, startnode, component):
                     closed = True
         if closed:
-            _unblock(thisnode[0])
+            _unblock(thisnode)
         else:
             for nextnode in component[thisnode]:
-                if thisnode not in B[nextnode[0]]: # TODO: use set for speedup?
-                    B[nextnode[0]].append(thisnode)
+                if thisnode not in B[nextnode]: # TODO: use set for speedup?
+                    B[nextnode].append(thisnode)
         path.pop() # remove thisnode from path
+        blocked_complexes[thisnode[0]] = False
         return closed
 
     path = [] # stack of nodes in current path
     blocked = defaultdict(bool) # vertex: blocked from search?
+    blocked_complexes = defaultdict(bool) # reaction complex blocked from search?
     B = defaultdict(list) # graph portions that yield no elementary circuit
     result = [] # list to accumulate the circuits found
     # Johnson's algorithm requires some ordering of the nodes.
@@ -189,12 +192,7 @@ def simple_cycles(G):
             startnode = min(component,key=ordering.__getitem__)
             for node in component:
                 blocked[node] = False
+                blocked_complexes[node[0]] = False
                 B[node][:] = []
             dummy=circuit(startnode, startnode, component)
-
-    print 'number of elementary circuits: ', str(len(result))
-    print 'elementary circuits:'
-    for circ in result:
-        print circ
-
     return result
